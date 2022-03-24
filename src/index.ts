@@ -7,8 +7,8 @@ camera.position.z = 1;
 
 const scene = new THREE.Scene();
 
-const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-const material = new THREE.MeshNormalMaterial();
+const geometry = new THREE.CircleGeometry(0.1, 64);
+const material = new THREE.MeshBasicMaterial({ color: 0xffbf00 });
 
 const mesh = new THREE.Mesh(geometry, material);
 scene.add(mesh);
@@ -20,8 +20,8 @@ document.body.appendChild(renderer.domElement);
 
 // animation
 
-function animation(time: any) {
-    mesh.rotation.x = time / 2000;
-    mesh.rotation.y = time / 1000;
+function animation(time: number) {
+    // mesh.rotation.x = time / 2000;
+    // mesh.rotation.y = time / 1000;
     renderer.render(scene, camera);
 }
