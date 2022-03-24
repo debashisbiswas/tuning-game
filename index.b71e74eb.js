@@ -519,8 +519,10 @@ var _three = require("three");
 const camera = new _three.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 10);
 camera.position.z = 1;
 const scene = new _three.Scene();
-const geometry = new _three.BoxGeometry(0.2, 0.2, 0.2);
-const material = new _three.MeshNormalMaterial();
+const geometry = new _three.CircleGeometry(0.1, 64);
+const material = new _three.MeshBasicMaterial({
+    color: 16760576
+});
 const mesh = new _three.Mesh(geometry, material);
 scene.add(mesh);
 const renderer = new _three.WebGLRenderer({
@@ -531,8 +533,8 @@ renderer.setAnimationLoop(animation);
 document.body.appendChild(renderer.domElement);
 // animation
 function animation(time) {
-    mesh.rotation.x = time / 2000;
-    mesh.rotation.y = time / 1000;
+    // mesh.rotation.x = time / 2000;
+    // mesh.rotation.y = time / 1000;
     renderer.render(scene, camera);
 }
 
