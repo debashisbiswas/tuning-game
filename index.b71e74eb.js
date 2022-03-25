@@ -537,6 +537,23 @@ function animation(time) {
     // mesh.rotation.y = time / 1000;
     renderer.render(scene, camera);
 }
+window.addEventListener('keydown', (event)=>{
+    let speed = 0.05;
+    switch(event.key){
+        case 'w':
+            mesh.position.y += speed;
+            break;
+        case 'a':
+            mesh.position.x -= speed;
+            break;
+        case 's':
+            mesh.position.y -= speed;
+            break;
+        case 'd':
+            mesh.position.x += speed;
+            break;
+    }
+});
 
 },{"three":"ktPTu"}],"ktPTu":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
