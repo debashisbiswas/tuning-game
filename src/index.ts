@@ -18,10 +18,24 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setAnimationLoop(animation);
 document.body.appendChild(renderer.domElement);
 
-// animation
-
 function animation(time: number) {
-    // mesh.rotation.x = time / 2000;
-    // mesh.rotation.y = time / 1000;
     renderer.render(scene, camera);
 }
+
+window.addEventListener('keydown', (event: KeyboardEvent) => {
+    let speed = 0.05;
+    switch (event.key) {
+        case 'w':
+            mesh.position.y += speed;
+            break;
+        case 'a':
+            mesh.position.x -= speed;
+            break;
+        case 's':
+            mesh.position.y -= speed;
+            break;
+        case 'd':
+            mesh.position.x += speed;
+            break;
+    }
+})
