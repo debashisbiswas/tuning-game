@@ -531,10 +531,7 @@ const renderer = new _three.WebGLRenderer({
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setAnimationLoop(animation);
 document.body.appendChild(renderer.domElement);
-// animation
 function animation(time) {
-    // mesh.rotation.x = time / 2000;
-    // mesh.rotation.y = time / 1000;
     renderer.render(scene, camera);
 }
 window.addEventListener('keydown', (event)=>{
