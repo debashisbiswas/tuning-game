@@ -519,10 +519,8 @@ var _three = require("three");
 const camera = new _three.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 10);
 camera.position.z = 1;
 const scene = new _three.Scene();
-const geometry = new _three.CircleGeometry(0.1, 64);
-const material = new _three.MeshBasicMaterial({
-    color: 16760576
-});
+const geometry = new _three.SphereGeometry(0.1);
+const material = new _three.MeshNormalMaterial();
 const mesh = new _three.Mesh(geometry, material);
 scene.add(mesh);
 const renderer = new _three.WebGLRenderer({
