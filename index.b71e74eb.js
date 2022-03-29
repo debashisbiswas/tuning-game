@@ -514,84 +514,34 @@ function hmrAcceptRun(bundle, id) {
 }
 
 },{}],"h7u1C":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 var _three = require("three");
 var _tweenJs = require("@tweenjs/tween.js");
-// init
+var _player = require("./player");
+var _playerDefault = parcelHelpers.interopDefault(_player);
 const camera = new _three.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 10);
-camera.position.z = 1;
 const scene = new _three.Scene();
-const geometry = new _three.SphereGeometry(0.1);
-const material = new _three.MeshNormalMaterial();
-const mesh = new _three.Mesh(geometry, material);
-scene.add(mesh);
 const renderer = new _three.WebGLRenderer({
     antialias: true
 });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setAnimationLoop(animation);
-document.body.appendChild(renderer.domElement);
-let directions = {
-    up: false,
-    down: false,
-    left: false,
-    right: false
+const player = new _playerDefault.default();
+const init = ()=>{
+    camera.position.z = 1;
+    scene.add(player.mesh);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setAnimationLoop(animation);
+    document.body.appendChild(renderer.domElement);
 };
-const speed = 0.1;
+init();
 function animation(time) {
     renderer.render(scene, camera);
     _tweenJs.update(time);
-    if (directions.up || directions.down || directions.left || directions.right) {
-        const old_pos = {
-            x: mesh.position.x,
-            y: mesh.position.y
-        };
-        let new_pos = {
-            ...old_pos
-        };
-        if (directions.up) new_pos.y += speed;
-        if (directions.down) new_pos.y -= speed;
-        if (directions.left) new_pos.x -= speed;
-        if (directions.right) new_pos.x += speed;
-        new _tweenJs.Tween(old_pos).to(new_pos, 200).easing(_tweenJs.Easing.Quadratic.Out).onUpdate(()=>{
-            mesh.position.x = old_pos.x;
-            mesh.position.y = old_pos.y;
-        }).start();
-    }
+    player.applyMovement();
 }
-window.addEventListener('keyup', (event)=>{
-    switch(event.key){
-        case 'w':
-            directions.up = false;
-            break;
-        case 'a':
-            directions.left = false;
-            break;
-        case 's':
-            directions.down = false;
-            break;
-        case 'd':
-            directions.right = false;
-            break;
-    }
-});
-window.addEventListener('keypress', (event)=>{
-    switch(event.key){
-        case 'w':
-            directions.up = true;
-            break;
-        case 'a':
-            directions.left = true;
-            break;
-        case 's':
-            directions.down = true;
-            break;
-        case 'd':
-            directions.right = true;
-            break;
-    }
-});
+window.addEventListener('keypress', player.handleKeyEvent);
+window.addEventListener('keyup', player.handleKeyEvent);
 
-},{"three":"ktPTu","@tweenjs/tween.js":"7DfAI"}],"ktPTu":[function(require,module,exports) {
+},{"three":"ktPTu","@tweenjs/tween.js":"7DfAI","./player":"6OTSH","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"ktPTu":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "ACESFilmicToneMapping", ()=>ACESFilmicToneMapping
@@ -31398,6 +31348,71 @@ process.umask = function() {
     return 0;
 };
 
-},{}]},["8wcER","h7u1C"], "h7u1C", "parcelRequire2dfb")
+},{}],"6OTSH":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _three = require("three");
+var _tweenJs = require("@tweenjs/tween.js");
+class Player {
+    directions = {
+        up: false,
+        down: false,
+        left: false,
+        right: false
+    };
+    speed = 0.1;
+    constructor(){
+        this.mesh = new _three.Mesh(new _three.SphereGeometry(0.1), new _three.MeshNormalMaterial());
+    }
+    handleKeyEvent(event) {
+        let keytoggle = false;
+        switch(event.type){
+            case 'keypress':
+                keytoggle = true;
+                break;
+            case 'keyup':
+                keytoggle = false;
+                break;
+            default:
+                return;
+        }
+        switch(event.key){
+            case 'w':
+                this.directions.up = keytoggle;
+                break;
+            case 'a':
+                this.directions.left = keytoggle;
+                break;
+            case 's':
+                this.directions.down = keytoggle;
+                break;
+            case 'd':
+                this.directions.right = keytoggle;
+                break;
+        }
+    }
+    applyMovement() {
+        if (this.directions.up || this.directions.down || this.directions.left || this.directions.right) {
+            const old_pos = {
+                x: this.mesh.position.x,
+                y: this.mesh.position.y
+            };
+            let new_pos = {
+                ...old_pos
+            };
+            if (this.directions.up) new_pos.y += this.speed;
+            if (this.directions.down) new_pos.y -= this.speed;
+            if (this.directions.left) new_pos.x -= this.speed;
+            if (this.directions.right) new_pos.x += this.speed;
+            new _tweenJs.Tween(old_pos).to(new_pos, 200).easing(_tweenJs.Easing.Quadratic.Out).onUpdate(()=>{
+                this.mesh.position.x = old_pos.x;
+                this.mesh.position.y = old_pos.y;
+            }).start();
+        }
+    }
+}
+exports.default = Player;
+
+},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","@tweenjs/tween.js":"7DfAI"}]},["8wcER","h7u1C"], "h7u1C", "parcelRequire2dfb")
 
 //# sourceMappingURL=index.b71e74eb.js.map
