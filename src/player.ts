@@ -1,24 +1,26 @@
-import { Mesh, MeshNormalMaterial, SphereGeometry } from "three";
-import { Tween, Easing } from "@tweenjs/tween.js";
+import { Easing, Tween } from "@tweenjs/tween.js";
+import { CircleGeometry, Mesh, MeshNormalMaterial } from "three";
+import view from "./view";
+import dimensions from "./dimensions";
 
 export default class Player {
     mesh: Mesh;
-    directions = {
+    private directions = {
         up: false,
         down: false,
         left: false,
         right: false
     }
-    speed = 0.1
+    speed = 20 * view.xunit
 
     constructor() {
         this.mesh = new Mesh(
-            new SphereGeometry(0.1),
+            new CircleGeometry(dimensions.player_size, 50),
             new MeshNormalMaterial()
         );
     }
 
-    handleKeyEvent(event: KeyboardEvent) {
+    handleKeyEvent = (event: KeyboardEvent) => {
         let keytoggle = false;
         switch (event.type) {
             case 'keypress':
@@ -47,27 +49,25 @@ export default class Player {
         }
     }
 
-    applyMovement() {
-        if (this.directions.up || this.directions.down || this.directions.left || this.directions.right) {
-            const old_pos = {
-                x: this.mesh.position.x,
-                y: this.mesh.position.y
-            }
-            let new_pos = { ...old_pos };
-
-            if (this.directions.up) new_pos.y += this.speed;
-            if (this.directions.down) new_pos.y -= this.speed;
-            if (this.directions.left) new_pos.x -= this.speed;
-            if (this.directions.right) new_pos.x += this.speed;
-
-            new Tween(old_pos)
-                .to(new_pos, 200)
-                .easing(Easing.Quadratic.Out)
-                .onUpdate(() => {
-                    this.mesh.position.x = old_pos.x;
-                    this.mesh.position.y = old_pos.y;
-                })
-                .start()
+    applyMovement = () => {
+        const old_pos = {
+            x: this.mesh.position.x,
+            y: this.mesh.position.y
         }
+        let new_pos = { ...old_pos };
+
+        if (this.directions.up) new_pos.y += this.speed;
+        if (this.directions.down) new_pos.y -= this.speed;
+        if (this.directions.left) new_pos.x -= this.speed;
+        if (this.directions.right) new_pos.x += this.speed;
+
+        new Tween(old_pos)
+            .to(new_pos, 500)
+            .easing(Easing.Quadratic.Out)
+            .onUpdate(() => {
+                this.mesh.position.x = old_pos.x;
+                this.mesh.position.y = old_pos.y;
+            })
+            .start()
     }
 }
