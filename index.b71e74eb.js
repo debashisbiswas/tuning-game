@@ -515,16 +515,26 @@ function hmrAcceptRun(bundle, id) {
 
 },{}],"h7u1C":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-var _three = require("three");
 var _tweenJs = require("@tweenjs/tween.js");
+var _three = require("three");
+var _dimensions = require("./dimensions");
+var _dimensionsDefault = parcelHelpers.interopDefault(_dimensions);
 var _player = require("./player");
 var _playerDefault = parcelHelpers.interopDefault(_player);
-const camera = new _three.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 10);
+var _view = require("./view");
+var _viewDefault = parcelHelpers.interopDefault(_view);
+const camera = new _three.OrthographicCamera(-_viewDefault.default.width / 2, _viewDefault.default.width / 2, _viewDefault.default.height / 2, -_viewDefault.default.height / 2);
 const scene = new _three.Scene();
 const renderer = new _three.WebGLRenderer({
     antialias: true
 });
 const player = new _playerDefault.default();
+const objects = [];
+const animation = (time)=>{
+    renderer.render(scene, camera);
+    _tweenJs.update(time);
+    player.applyMovement();
+};
 const init = ()=>{
     camera.position.z = 1;
     scene.add(player.mesh);
@@ -533,15 +543,49 @@ const init = ()=>{
     document.body.appendChild(renderer.domElement);
 };
 init();
-function animation(time) {
-    renderer.render(scene, camera);
-    _tweenJs.update(time);
-    player.applyMovement();
-}
 window.addEventListener('keypress', player.handleKeyEvent);
 window.addEventListener('keyup', player.handleKeyEvent);
+window.addEventListener('resize', ()=>{
+    _viewDefault.default.updateSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(_viewDefault.default.width, _viewDefault.default.height);
+    camera.left = -_viewDefault.default.width / 2;
+    camera.right = _viewDefault.default.width / 2;
+    camera.top = _viewDefault.default.height / 2;
+    camera.bottom = -_viewDefault.default.height / 2;
+    camera.updateProjectionMatrix();
+});
+// TODO: These intervals should not always be the same. When you update
+// the intervals to be different times, make sure the tween duration stays constant
+window.setInterval(()=>{
+    // Random number between 50 and -50
+    const gap_center = _viewDefault.default.yunit * (Math.floor(Math.random() * 101) - 50);
+    const gap_size = _dimensionsDefault.default.player_size + _viewDefault.default.yunit * 20;
+    const obstacle_width = 5 * _viewDefault.default.xunit;
+    const top_height = 100 * _viewDefault.default.yunit - (gap_center + gap_size);
+    const bot_height = Math.abs(-100 * _viewDefault.default.yunit - (gap_center - gap_size));
+    let top_object_mesh = new _three.Mesh(new _three.BoxGeometry(obstacle_width, top_height), new _three.MeshNormalMaterial());
+    let bot_object_mesh = new _three.Mesh(new _three.BoxGeometry(obstacle_width, bot_height), new _three.MeshNormalMaterial());
+    top_object_mesh.position.set(100 * _viewDefault.default.xunit + obstacle_width, _viewDefault.default.yunit * 100 - top_height / 2, 0);
+    bot_object_mesh.position.set(100 * _viewDefault.default.xunit + obstacle_width, _viewDefault.default.yunit * -100 + bot_height / 2, 0);
+    objects.push(top_object_mesh);
+    objects.push(bot_object_mesh);
+    scene.add(top_object_mesh);
+    scene.add(bot_object_mesh);
+    for (let object of objects){
+        let coords = {
+            x: object.position.x,
+            y: object.position.y
+        };
+        new _tweenJs.Tween(coords).to({
+            x: object.position.x - 50 * _viewDefault.default.xunit
+        }).duration(2500).onUpdate(()=>{
+            object.position.x = coords.x;
+            object.position.y = coords.y;
+        }).start();
+    }
+}, 2500);
 
-},{"three":"ktPTu","@tweenjs/tween.js":"7DfAI","./player":"6OTSH","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"ktPTu":[function(require,module,exports) {
+},{"three":"ktPTu","@tweenjs/tween.js":"7DfAI","./player":"6OTSH","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./view":"1ce4O","./dimensions":"is4Qo"}],"ktPTu":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "ACESFilmicToneMapping", ()=>ACESFilmicToneMapping
@@ -31351,8 +31395,12 @@ process.umask = function() {
 },{}],"6OTSH":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
-var _three = require("three");
 var _tweenJs = require("@tweenjs/tween.js");
+var _three = require("three");
+var _view = require("./view");
+var _viewDefault = parcelHelpers.interopDefault(_view);
+var _dimensions = require("./dimensions");
+var _dimensionsDefault = parcelHelpers.interopDefault(_dimensions);
 class Player {
     directions = {
         up: false,
@@ -31360,11 +31408,11 @@ class Player {
         left: false,
         right: false
     };
-    speed = 0.1;
+    speed = 20 * _viewDefault.default.xunit;
     constructor(){
-        this.mesh = new _three.Mesh(new _three.SphereGeometry(0.1), new _three.MeshNormalMaterial());
+        this.mesh = new _three.Mesh(new _three.CircleGeometry(_dimensionsDefault.default.player_size, 50), new _three.MeshNormalMaterial());
     }
-    handleKeyEvent(event) {
+    handleKeyEvent = (event)=>{
         let keytoggle = false;
         switch(event.type){
             case 'keypress':
@@ -31390,29 +31438,61 @@ class Player {
                 this.directions.right = keytoggle;
                 break;
         }
-    }
-    applyMovement() {
-        if (this.directions.up || this.directions.down || this.directions.left || this.directions.right) {
-            const old_pos = {
-                x: this.mesh.position.x,
-                y: this.mesh.position.y
-            };
-            let new_pos = {
-                ...old_pos
-            };
-            if (this.directions.up) new_pos.y += this.speed;
-            if (this.directions.down) new_pos.y -= this.speed;
-            if (this.directions.left) new_pos.x -= this.speed;
-            if (this.directions.right) new_pos.x += this.speed;
-            new _tweenJs.Tween(old_pos).to(new_pos, 200).easing(_tweenJs.Easing.Quadratic.Out).onUpdate(()=>{
-                this.mesh.position.x = old_pos.x;
-                this.mesh.position.y = old_pos.y;
-            }).start();
-        }
-    }
+    };
+    applyMovement = ()=>{
+        const old_pos = {
+            x: this.mesh.position.x,
+            y: this.mesh.position.y
+        };
+        let new_pos = {
+            ...old_pos
+        };
+        if (this.directions.up) new_pos.y += this.speed;
+        if (this.directions.down) new_pos.y -= this.speed;
+        if (this.directions.left) new_pos.x -= this.speed;
+        if (this.directions.right) new_pos.x += this.speed;
+        new _tweenJs.Tween(old_pos).to(new_pos, 500).easing(_tweenJs.Easing.Quadratic.Out).onUpdate(()=>{
+            this.mesh.position.x = old_pos.x;
+            this.mesh.position.y = old_pos.y;
+        }).start();
+    };
 }
 exports.default = Player;
 
-},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","@tweenjs/tween.js":"7DfAI"}]},["8wcER","h7u1C"], "h7u1C", "parcelRequire2dfb")
+},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","@tweenjs/tween.js":"7DfAI","./view":"1ce4O","./dimensions":"is4Qo"}],"1ce4O":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+class View {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    xunit = this.width / 200;
+    yunit = this.height / 200;
+    bottom = this.yunit * 200;
+    updateSize = (width, height)=>{
+        this.width = width;
+        this.height = height;
+        this.xunit = width / 200;
+        this.yunit = height / 200;
+    };
+}
+exports.default = new View();
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"is4Qo":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _view = require("./view");
+var _viewDefault = parcelHelpers.interopDefault(_view);
+class Dimensions {
+    player_size = 0;
+    constructor(){
+        this.recalc();
+    }
+    recalc = ()=>{
+        this.player_size = 10 * _viewDefault.default.yunit;
+    };
+}
+exports.default = new Dimensions();
+
+},{"./view":"1ce4O","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["8wcER","h7u1C"], "h7u1C", "parcelRequire2dfb")
 
 //# sourceMappingURL=index.b71e74eb.js.map
