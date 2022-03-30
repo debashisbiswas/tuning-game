@@ -1,0 +1,41 @@
+{
+    "root": true,
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+        "@typescript-eslint"
+    ],
+    "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended"
+    ],
+    "rules": {
+        "indent": ["error", 4],
+        "linebreak-style": ["error", "unix"],
+        "quotes": ["error", "single"],
+        "semi": ["error", "always"],
+        "dot-location": ["error", "property"],
+        "padded-blocks": ["error", "never"],
+        "object-curly-spacing": ["error", "always"],
+        "max-len": ["error", 80],
+        "eol-last": "error",
+        "block-spacing": "error",
+        "arrow-spacing": "error",
+        "key-spacing": "error",
+        "keyword-spacing": "error",
+        "arrow-parens": "error",
+        "space-in-parens": "error",
+        "space-before-blocks": "error",
+        "space-infix-ops": "error",
+        "newline-per-chained-call": "error",
+        "comma-spacing": "error",
+        "comma-style": "error",
+        "dot-notation": "error",
+        "no-trailing-spaces": "error",
+        "no-multiple-empty-lines": "error",
+        "no-warning-comments": "warn",
+        "no-await-in-loop": "warn",
+        "no-useless-return": "warn",
+        "yoda": "warn"
+    }
+}

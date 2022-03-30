@@ -12,11 +12,7 @@
             "es2017",
             "dom"
         ],
-        "strict": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "noImplicitReturns": true,
-        "noFallthroughCasesInSwitch": true
+        "strict": true
     },
     "include": [
         "src/**/*"
