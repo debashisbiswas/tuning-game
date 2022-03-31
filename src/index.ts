@@ -16,21 +16,32 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 const player = new Player();
 const objects: Array<THREE.Mesh> = [];
 
-// TODO: Currently calculates this incorrectly. This link seems to explain why:
-// https://discourse.threejs.org/t/bounding-box-is-calculated-wrong/1763
 const checkCollisions = () => {
-    player.mesh.updateMatrixWorld();
+    const circle = new THREE.Sphere();
+    if (!player.geometry.boundingBox) {
+        player.geometry.computeBoundingSphere();
+    }
+
+    /* eslint-disable-next-line @typescript-eslint/no-non-null-assertion --
+     * The above condition generates the bounding sphere if it does
+     * not exist, so the boundingSphere must exist here.
+    **/
+    circle.copy(player.geometry.boundingSphere!)
+        .applyMatrix4(player.mesh.matrixWorld);
+
+    const box = new THREE.Box3();
     for (const object of objects) {
-        object.updateMatrixWorld();
-        if (object.geometry.boundingBox && player.geometry.boundingSphere) {
-            if (object.geometry.boundingBox.intersectsSphere(
-                player.geometry.boundingSphere
-            )) {
-                console.log('Hit!');
-            }
+        if (!object.geometry.boundingBox) {
+            object.geometry.computeBoundingBox();
         }
-        else {
-            console.log('Does not exist');
+
+        /* eslint-disable-next-line @typescript-eslint/no-non-null-assertion --
+         * The above condition generates the bounding box if it does
+         * not exist, so the boundingBox must exist here.
+        **/
+        box.copy(object.geometry.boundingBox!).applyMatrix4(object.matrixWorld);
+        if (box.intersectsSphere(circle)) {
+            console.log('Hit!');
         }
     }
 };
@@ -98,8 +109,6 @@ window.setInterval(() => {
     objects.push(bot_object_mesh);
     scene.add(top_object_mesh);
     scene.add(bot_object_mesh);
-    top_object_mesh.geometry.computeBoundingBox();
-    bot_object_mesh.geometry.computeBoundingBox();
 
     for (const object of objects) {
         const coords = {
