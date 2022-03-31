@@ -25,29 +25,29 @@ export default class Player {
     handleKeyEvent = (event: KeyboardEvent) => {
         let keytoggle = false;
         switch (event.type) {
-        case 'keypress':
-            keytoggle = true;
-            break;
-        case 'keyup':
-            keytoggle = false;
-            break;
-        default:
-            return;
+            case 'keypress':
+                keytoggle = true;
+                break;
+            case 'keyup':
+                keytoggle = false;
+                break;
+            default:
+                return;
         }
 
         switch (event.key) {
-        case 'w':
-            this.directions.up = keytoggle;
-            break;
-        case 'a':
-            this.directions.left = keytoggle;
-            break;
-        case 's':
-            this.directions.down = keytoggle;
-            break;
-        case 'd':
-            this.directions.right = keytoggle;
-            break;
+            case 'w':
+                this.directions.up = keytoggle;
+                break;
+            case 'a':
+                this.directions.left = keytoggle;
+                break;
+            case 's':
+                this.directions.down = keytoggle;
+                break;
+            case 'd':
+                this.directions.right = keytoggle;
+                break;
         }
     };
 
