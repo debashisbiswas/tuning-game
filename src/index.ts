@@ -16,10 +16,30 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 const player = new Player();
 const objects: Array<THREE.Mesh> = [];
 
+// TODO: Currently calculates this incorrectly. This link seems to explain why:
+// https://discourse.threejs.org/t/bounding-box-is-calculated-wrong/1763
+const checkCollisions = () => {
+    player.mesh.updateMatrixWorld();
+    for (const object of objects) {
+        object.updateMatrixWorld();
+        if (object.geometry.boundingBox && player.geometry.boundingSphere) {
+            if (object.geometry.boundingBox.intersectsSphere(
+                player.geometry.boundingSphere
+            )) {
+                console.log('Hit!');
+            }
+        }
+        else {
+            console.log('Does not exist');
+        }
+    }
+};
+
 const animation = (time: number) => {
     renderer.render(scene, camera);
     TWEEN.update(time);
     player.applyMovement();
+    checkCollisions();
 };
 
 const init = () => {
@@ -28,6 +48,7 @@ const init = () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setAnimationLoop(animation);
     document.body.appendChild(renderer.domElement);
+    player.geometry.computeBoundingSphere();
 };
 init();
 
@@ -61,6 +82,7 @@ window.setInterval(() => {
         new THREE.BoxGeometry(obstacle_width, bot_height),
         new THREE.MeshNormalMaterial()
     );
+
     top_object_mesh.position.set(
         100 * view.xunit + obstacle_width,
         view.yunit * 100 - (top_height / 2),
@@ -71,10 +93,14 @@ window.setInterval(() => {
         view.yunit * -100 + (bot_height / 2),
         0
     );
+
     objects.push(top_object_mesh);
     objects.push(bot_object_mesh);
     scene.add(top_object_mesh);
     scene.add(bot_object_mesh);
+    top_object_mesh.geometry.computeBoundingBox();
+    bot_object_mesh.geometry.computeBoundingBox();
+
     for (const object of objects) {
         const coords = {
             x: object.position.x,

@@ -4,6 +4,7 @@ import view from './view';
 import dimensions from './dimensions';
 
 export default class Player {
+    geometry: CircleGeometry;
     mesh: Mesh;
     private directions = {
         up: false,
@@ -14,8 +15,9 @@ export default class Player {
     speed = 20 * view.xunit;
 
     constructor() {
+        this.geometry = new CircleGeometry(dimensions.player_size, 50);
         this.mesh = new Mesh(
-            new CircleGeometry(dimensions.player_size, 50),
+            this.geometry,
             new MeshNormalMaterial()
         );
     }
