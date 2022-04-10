@@ -11,6 +11,21 @@ const camera = new THREE.OrthographicCamera(
     -view.height / 2,
 );
 
+const listener = new THREE.AudioListener();
+camera.add(listener);
+
+function handleSuccess(stream: MediaStream) {
+    const audio = new THREE.Audio(listener);
+
+    const context = listener.context;
+    const source = context.createMediaStreamSource(stream).mediaStream;
+    audio.setMediaStreamSource(source);
+}
+
+navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+    .then(handleSuccess)
+    .catch(console.log);
+
 const scene = new THREE.Scene();
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 const player = new Player();
