@@ -517,80 +517,24 @@ function hmrAcceptRun(bundle, id) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 var _tweenJs = require("@tweenjs/tween.js");
 var _three = require("three");
+var _audio = require("./audio");
+var _audioDefault = parcelHelpers.interopDefault(_audio);
 var _dimensions = require("./dimensions");
 var _dimensionsDefault = parcelHelpers.interopDefault(_dimensions);
 var _player = require("./player");
 var _playerDefault = parcelHelpers.interopDefault(_player);
 var _view = require("./view");
 var _viewDefault = parcelHelpers.interopDefault(_view);
-const camera = new _three.OrthographicCamera(-_viewDefault.default.width / 2, _viewDefault.default.width / 2, _viewDefault.default.height / 2, -_viewDefault.default.height / 2);
-const listener = new _three.AudioListener();
-const audio = new _three.Audio(listener);
-const analyser = new _three.AudioAnalyser(audio, 2048);
-camera.add(listener);
-function handleSuccess(stream) {
-    const context = listener.context;
-    const source = context.createMediaStreamSource(stream);
-    audio.setMediaStreamSource(source.mediaStream);
-    source.connect(analyser.analyser);
-    console.log('Audio successfully attached!');
-}
-navigator.mediaDevices.getUserMedia({
-    audio: {
-        autoGainControl: false,
-        echoCancellation: false,
-        latency: 0,
-        noiseSuppression: false
-    }
-}).then(handleSuccess).catch(console.error);
-const findFundamentalFreq = (buf, sampleRate)=>{
-    // Implements the ACF2+ algorithm
-    let SIZE = buf.length;
-    let rms = 0;
-    for(let i = 0; i < SIZE; i++){
-        const val = buf[i];
-        rms += val * val;
-    }
-    rms = Math.sqrt(rms / SIZE);
-    if (rms < 0.01) return -1;
-    let r1 = 0, r2 = SIZE - 1;
-    const thres = 0.2;
-    for(let i1 = 0; i1 < SIZE / 2; i1++)if (Math.abs(buf[i1]) < thres) {
-        r1 = i1;
-        break;
-    }
-    for(let i2 = 1; i2 < SIZE / 2; i2++)if (Math.abs(buf[SIZE - i2]) < thres) {
-        r2 = SIZE - i2;
-        break;
-    }
-    buf = buf.slice(r1, r2);
-    SIZE = buf.length;
-    const c = Float32Array.from(new Array(SIZE).fill(0));
-    for(let i3 = 0; i3 < SIZE; i3++)for(let j = 0; j < SIZE - i3; j++)c[i3] = c[i3] + buf[j] * buf[j + i3];
-    let d = 0;
-    while(c[d] > c[d + 1])d++;
-    let maxval = -1, maxpos = -1;
-    for(let i4 = d; i4 < SIZE; i4++)if (c[i4] > maxval) {
-        maxval = c[i4];
-        maxpos = i4;
-    }
-    let T0 = maxpos;
-    const x1 = c[T0 - 1], x2 = c[T0], x3 = c[T0 + 1];
-    const a = (x1 + x3 - 2 * x2) / 2;
-    const b = (x3 - x1) / 2;
-    if (a) T0 = T0 - b / (2 * a);
-    return sampleRate / T0;
-};
-const getScoreElement = ()=>{
-    return document.getElementById('center-ui');
-};
+const audioManager = new _audioDefault.default();
 const scene = new _three.Scene();
 const renderer = new _three.WebGLRenderer({
     antialias: true
 });
 const player = new _playerDefault.default();
 const objects = [];
-const ui = getScoreElement();
+const ui = document.getElementById('center-ui');
+const camera = new _three.OrthographicCamera(-_viewDefault.default.width / 2, _viewDefault.default.width / 2, _viewDefault.default.height / 2, -_viewDefault.default.height / 2);
+camera.add(audioManager.listener);
 const checkCollisions = ()=>{
     const circle = new _three.Sphere();
     if (!player.geometry.boundingBox) player.geometry.computeBoundingSphere();
@@ -615,41 +559,18 @@ const updateUI = (score)=>{
     }
     ui.innerHTML = score;
 };
-const noteStrings = [
-    'C',
-    'C#',
-    'D',
-    'D#',
-    'E',
-    'F',
-    'F#',
-    'G',
-    'G#',
-    'A',
-    'A#',
-    'B'
-];
-function noteFromPitch(frequency) {
-    const noteNum = 12 * (Math.log(frequency / 440) / Math.log(2));
-    return Math.round(noteNum) + 69;
-}
-function frequencyFromNoteNumber(note) {
-    return 440 * Math.pow(2, (note - 69) / 12);
-}
-function centsOffFromPitch(frequency, note) {
-    return Math.floor(1200 * Math.log(frequency / frequencyFromNoteNumber(note)) / Math.log(2));
-}
 const animation = (time)=>{
     renderer.render(scene, camera);
     _tweenJs.update(time);
     player.applyMovement();
     checkCollisions();
-    const buffer = new Float32Array(analyser.analyser.fftSize);
-    analyser.analyser.getFloatTimeDomainData(buffer);
-    const fundamentalFreq = findFundamentalFreq(buffer, audio.context.sampleRate);
-    const noteNumber = noteFromPitch(fundamentalFreq);
-    const note = noteStrings[noteNumber % 12];
-    if (note) updateUI(`${note}, ${centsOffFromPitch(fundamentalFreq, noteNumber)}`);
+    const analyzerNode = audioManager.analyserNode;
+    const buffer = new Float32Array(analyzerNode.fftSize);
+    analyzerNode.getFloatTimeDomainData(buffer);
+    const fundamentalFreq = audioManager.findFundamentalFreq(buffer);
+    const noteNumber = audioManager.noteFromPitch(fundamentalFreq);
+    const note = audioManager.noteStrings[noteNumber % 12];
+    if (note) updateUI(`${note}, ${audioManager.centsOffFromPitch(fundamentalFreq, noteNumber)}`);
     else updateUI('');
 };
 const init = ()=>{
@@ -703,7 +624,7 @@ window.setInterval(()=>{
     }
 }, 2500);
 
-},{"three":"ktPTu","@tweenjs/tween.js":"7DfAI","./dimensions":"is4Qo","./player":"6OTSH","./view":"1ce4O","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"ktPTu":[function(require,module,exports) {
+},{"three":"ktPTu","@tweenjs/tween.js":"7DfAI","./dimensions":"is4Qo","./player":"6OTSH","./view":"1ce4O","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./audio":"1vRTt"}],"ktPTu":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "ACESFilmicToneMapping", ()=>ACESFilmicToneMapping
@@ -31612,6 +31533,98 @@ class Player {
 }
 exports.default = Player;
 
-},{"@tweenjs/tween.js":"7DfAI","three":"ktPTu","./view":"1ce4O","./dimensions":"is4Qo","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["8wcER","h7u1C"], "h7u1C", "parcelRequire2dfb")
+},{"@tweenjs/tween.js":"7DfAI","three":"ktPTu","./view":"1ce4O","./dimensions":"is4Qo","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"1vRTt":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _three = require("three");
+class AudioManager {
+    noteStrings = [
+        'C',
+        'C#',
+        'D',
+        'D#',
+        'E',
+        'F',
+        'F#',
+        'G',
+        'G#',
+        'A',
+        'A#',
+        'B'
+    ];
+    constructor(){
+        this.listener = new _three.AudioListener();
+        this.audio = new _three.Audio(this.listener);
+        this.three_analyser = new _three.AudioAnalyser(this.audio, 2048);
+        navigator.mediaDevices.getUserMedia({
+            audio: {
+                autoGainControl: false,
+                echoCancellation: false,
+                latency: 0,
+                noiseSuppression: false
+            }
+        }).then(this._handleGetMicSuccess).catch(console.error);
+    }
+    _handleGetMicSuccess = (stream)=>{
+        const source = this.listener.context.createMediaStreamSource(stream);
+        this.audio.setMediaStreamSource(source.mediaStream);
+        source.connect(this.three_analyser.analyser);
+        console.log('Audio successfully attached!');
+    };
+    get analyserNode() {
+        return this.three_analyser.analyser;
+    }
+    findFundamentalFreq = (buf)=>{
+        // Implements the ACF2+ algorithm
+        let SIZE = buf.length;
+        let rms = 0;
+        for(let i = 0; i < SIZE; i++){
+            const val = buf[i];
+            rms += val * val;
+        }
+        rms = Math.sqrt(rms / SIZE);
+        if (rms < 0.01) return -1;
+        let r1 = 0, r2 = SIZE - 1;
+        const thres = 0.2;
+        for(let i1 = 0; i1 < SIZE / 2; i1++)if (Math.abs(buf[i1]) < thres) {
+            r1 = i1;
+            break;
+        }
+        for(let i2 = 1; i2 < SIZE / 2; i2++)if (Math.abs(buf[SIZE - i2]) < thres) {
+            r2 = SIZE - i2;
+            break;
+        }
+        buf = buf.slice(r1, r2);
+        SIZE = buf.length;
+        const c = Float32Array.from(new Array(SIZE).fill(0));
+        for(let i3 = 0; i3 < SIZE; i3++)for(let j = 0; j < SIZE - i3; j++)c[i3] = c[i3] + buf[j] * buf[j + i3];
+        let d = 0;
+        while(c[d] > c[d + 1])d++;
+        let maxval = -1, maxpos = -1;
+        for(let i4 = d; i4 < SIZE; i4++)if (c[i4] > maxval) {
+            maxval = c[i4];
+            maxpos = i4;
+        }
+        let T0 = maxpos;
+        const x1 = c[T0 - 1], x2 = c[T0], x3 = c[T0 + 1];
+        const a = (x1 + x3 - 2 * x2) / 2;
+        const b = (x3 - x1) / 2;
+        if (a) T0 = T0 - b / (2 * a);
+        return this.audio.context.sampleRate / T0;
+    };
+    noteFromPitch = (frequency)=>{
+        const noteNum = 12 * (Math.log(frequency / 440) / Math.log(2));
+        return Math.round(noteNum) + 69;
+    };
+    frequencyFromNoteNumber = (note)=>{
+        return 440 * Math.pow(2, (note - 69) / 12);
+    };
+    centsOffFromPitch = (frequency, note)=>{
+        return Math.floor(1200 * Math.log(frequency / this.frequencyFromNoteNumber(note)) / Math.log(2));
+    };
+}
+exports.default = AudioManager;
+
+},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["8wcER","h7u1C"], "h7u1C", "parcelRequire2dfb")
 
 //# sourceMappingURL=index.b71e74eb.js.map
