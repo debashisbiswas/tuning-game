@@ -51,6 +51,24 @@ export default class Player {
         }
     };
 
+    move = (new_y: number) => {
+        const old_pos = {
+            x: this.mesh.position.x,
+            y: this.mesh.position.y
+        };
+        const new_pos = { ...old_pos };
+        new_pos.y = view.yunit * new_y;
+
+        new Tween(old_pos)
+            .to(new_pos, 250)
+            .easing(Easing.Quadratic.Out)
+            .onUpdate(() => {
+                this.mesh.position.x = old_pos.x;
+                this.mesh.position.y = old_pos.y;
+            })
+            .start();
+    };
+
     applyMovement = () => {
         const old_pos = {
             x: this.mesh.position.x,

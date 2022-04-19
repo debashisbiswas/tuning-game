@@ -62,7 +62,7 @@ const updateUI = (score: string) => {
 const animation = (time: number) => {
     renderer.render(scene, camera);
     TWEEN.update(time);
-    player.applyMovement();
+    // player.applyMovement();
     checkCollisions();
 
     const analyzerNode = audioManager.analyserNode;
@@ -71,6 +71,7 @@ const animation = (time: number) => {
     const fundamentalFreq = audioManager.findFundamentalFreq(buffer);
     const noteNumber: number = audioManager.noteFromPitch(fundamentalFreq);
     const note: string = audioManager.noteStrings[noteNumber % 12];
+    player.move(audioManager.centsOffFromPitch(fundamentalFreq, noteNumber));
     if (note) {
         updateUI(`${note}, ${
             audioManager.centsOffFromPitch(fundamentalFreq, noteNumber)

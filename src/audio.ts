@@ -95,7 +95,11 @@ export default class AudioManager {
 
     centsOffFromPitch = (frequency: number, note: number) => {
         return Math.floor(
-            1200 * Math.log(frequency / this.frequencyFromNoteNumber(note)) / Math.log(2)
+            1200
+            * Math.log(
+                frequency / this.frequencyFromNoteNumber(note)
+            )
+            / Math.log(2)
         );
     };
 }
