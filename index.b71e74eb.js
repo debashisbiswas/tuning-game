@@ -562,7 +562,7 @@ const updateUI = (score)=>{
 const animation = (time)=>{
     renderer.render(scene, camera);
     _tweenJs.update(time);
-    player.applyMovement();
+    // player.applyMovement();
     checkCollisions();
     const analyzerNode = audioManager.analyserNode;
     const buffer = new Float32Array(analyzerNode.fftSize);
@@ -570,8 +570,11 @@ const animation = (time)=>{
     const fundamentalFreq = audioManager.findFundamentalFreq(buffer);
     const noteNumber = audioManager.noteFromPitch(fundamentalFreq);
     const note = audioManager.noteStrings[noteNumber % 12];
-    if (note) updateUI(`${note}, ${audioManager.centsOffFromPitch(fundamentalFreq, noteNumber)}`);
-    else updateUI('');
+    if (note) {
+        const cents = audioManager.centsOffFromPitch(fundamentalFreq, noteNumber);
+        updateUI(`${note}, ${cents}`);
+        player.move(cents);
+    } else updateUI('');
 };
 const init = ()=>{
     camera.position.z = 1;
@@ -624,7 +627,7 @@ window.setInterval(()=>{
     }
 }, 2500);
 
-},{"three":"ktPTu","@tweenjs/tween.js":"7DfAI","./dimensions":"is4Qo","./player":"6OTSH","./view":"1ce4O","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./audio":"1vRTt"}],"ktPTu":[function(require,module,exports) {
+},{"three":"ktPTu","@tweenjs/tween.js":"7DfAI","./player":"6OTSH","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./view":"1ce4O","./dimensions":"is4Qo","./audio":"1vRTt"}],"ktPTu":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "ACESFilmicToneMapping", ()=>ACESFilmicToneMapping
@@ -31431,41 +31434,7 @@ process.umask = function() {
     return 0;
 };
 
-},{}],"is4Qo":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-var _view = require("./view");
-var _viewDefault = parcelHelpers.interopDefault(_view);
-class Dimensions {
-    player_size = 0;
-    constructor(){
-        this.recalc();
-    }
-    recalc = ()=>{
-        this.player_size = 10 * _viewDefault.default.yunit;
-    };
-}
-exports.default = new Dimensions();
-
-},{"./view":"1ce4O","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"1ce4O":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-class View {
-    width = window.innerWidth;
-    height = window.innerHeight;
-    xunit = this.width / 200;
-    yunit = this.height / 200;
-    bottom = this.yunit * 200;
-    updateSize = (width, height)=>{
-        this.width = width;
-        this.height = height;
-        this.xunit = width / 200;
-        this.yunit = height / 200;
-    };
-}
-exports.default = new View();
-
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"6OTSH":[function(require,module,exports) {
+},{}],"6OTSH":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _tweenJs = require("@tweenjs/tween.js");
@@ -31513,6 +31482,20 @@ class Player {
                 break;
         }
     };
+    move = (new_y)=>{
+        const old_pos = {
+            x: this.mesh.position.x,
+            y: this.mesh.position.y
+        };
+        const new_pos = {
+            ...old_pos
+        };
+        new_pos.y = new_y * 5 * _viewDefault.default.yunit;
+        new _tweenJs.Tween(old_pos).to(new_pos, 250).easing(_tweenJs.Easing.Quadratic.Out).onUpdate(()=>{
+            this.mesh.position.x = old_pos.x;
+            this.mesh.position.y = old_pos.y;
+        }).start();
+    };
     applyMovement = ()=>{
         const old_pos = {
             x: this.mesh.position.x,
@@ -31533,7 +31516,41 @@ class Player {
 }
 exports.default = Player;
 
-},{"@tweenjs/tween.js":"7DfAI","three":"ktPTu","./view":"1ce4O","./dimensions":"is4Qo","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"1vRTt":[function(require,module,exports) {
+},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","@tweenjs/tween.js":"7DfAI","./view":"1ce4O","./dimensions":"is4Qo"}],"1ce4O":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+class View {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    xunit = this.width / 200;
+    yunit = this.height / 200;
+    bottom = this.yunit * 200;
+    updateSize = (width, height)=>{
+        this.width = width;
+        this.height = height;
+        this.xunit = width / 200;
+        this.yunit = height / 200;
+    };
+}
+exports.default = new View();
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"is4Qo":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _view = require("./view");
+var _viewDefault = parcelHelpers.interopDefault(_view);
+class Dimensions {
+    player_size = 0;
+    constructor(){
+        this.recalc();
+    }
+    recalc = ()=>{
+        this.player_size = 10 * _viewDefault.default.yunit;
+    };
+}
+exports.default = new Dimensions();
+
+},{"./view":"1ce4O","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"1vRTt":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _three = require("three");
