@@ -57,7 +57,7 @@ export default class Player {
             y: this.mesh.position.y
         };
         const new_pos = { ...old_pos };
-        new_pos.y = view.yunit * new_y;
+        new_pos.y = new_y * 5 * view.yunit;
 
         new Tween(old_pos)
             .to(new_pos, 250)

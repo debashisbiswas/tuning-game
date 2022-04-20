@@ -71,11 +71,12 @@ const animation = (time: number) => {
     const fundamentalFreq = audioManager.findFundamentalFreq(buffer);
     const noteNumber: number = audioManager.noteFromPitch(fundamentalFreq);
     const note: string = audioManager.noteStrings[noteNumber % 12];
-    player.move(audioManager.centsOffFromPitch(fundamentalFreq, noteNumber));
     if (note) {
-        updateUI(`${note}, ${
-            audioManager.centsOffFromPitch(fundamentalFreq, noteNumber)
-        }`);
+        const cents = audioManager.centsOffFromPitch(
+            fundamentalFreq, noteNumber
+        );
+        updateUI(`${note}, ${cents}`);
+        player.move(cents);
     }
     else {
         updateUI('');
